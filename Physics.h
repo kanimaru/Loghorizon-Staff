@@ -1,7 +1,7 @@
-// AngleHeader.h
+// Physics.h
 
-#ifndef _ACCELHANDLING_h
-#define _ACCELHANDLING_h
+#ifndef _PHYSICS_h
+#define _PHYSICS_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"

@@ -9,6 +9,14 @@
 	#include "WProgram.h"
 #endif
 
+#include "Physics.h"
+
+#define MODE_COUNT 2
+//#define MODE_DEBUG
+
+extern runner modes[];
+extern runner activeMode;
+
 void setupModes();
 void doModes();
 

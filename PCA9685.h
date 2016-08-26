@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include <Wire.h>
+#include "LED.h"
 
 #define PCA9685_MODE1 0x00
 #define PCA9685_MODE2 0x01
@@ -26,6 +27,9 @@ public:
 	void setChannel(uint8_t channel, uint16_t value);
 
 	uint16_t getChannel(uint8_t channel);
+
+	void update();
+	LED leds[5];
 
 private:
 	uint8_t _address;

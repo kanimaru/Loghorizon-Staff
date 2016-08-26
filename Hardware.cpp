@@ -27,6 +27,41 @@ double angX;
 double angY;
 double angZ;
 
+PCA9685 chips[PCA_AMOUNT] = { 0x40, 0x41 };// , 0x42, 0x43, 0x44};
+LED* leds[LED_AMOUNT];
+
+void selfCheck()
+{
+	for (uint8_t i = 0; i < PCA_AMOUNT; i++)
+	{
+		chips[i].setChannel(PCA_ALL, 0xFFF);
+		delay(SELF_CHECK_DUR);
+		chips[i].setChannel(PCA_ALL, 0);
+	}
+}
+
+
+void setupHardware()
+{
+	pinMode(PIN_ACCEL_X, INPUT);
+	pinMode(PIN_ACCEL_Y, INPUT);
+	pinMode(PIN_ACCEL_Z, INPUT);
+
+	// Chips
+	for (uint8_t i = 0; i < PCA_AMOUNT; i++)
+	{
+		chips[i].begin();
+		chips[i].setFrequency(PCA_FREQ);
+		chips[i].setChannel(PCA_ALL, 0x000);
+
+		for (uint8_t l = 0; l < 5; l++)
+		{
+			leds[i * 5 + l] = &chips[i].leds[l];
+		}
+	}
+	selfCheck();
+}
+
 //
 //   Calculates the x,y,z values to the angeles.
 //
@@ -138,5 +173,12 @@ void readAccel() {
 	Serial.print("\taZ:");
 	Serial.println(angZ);
 #endif // ACCEL_DEBUG
+}
 
+void doLEDs()
+{
+	for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
+	{
+		chips[pca_choose].update();
+	}
 }

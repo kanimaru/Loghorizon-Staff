@@ -3,9 +3,9 @@
 // 
 
 #include "Modes.h"
-#include "AccelHandling.h"
-#include "RGBHandler.h"
+#include "Physics.h"
 #include "Hardware.h"
+#include "LED.h"
 
 AngleDef* setupX;
 AngleDef* setupZ;
@@ -15,23 +15,33 @@ boolean setupMode;
 AngleDef* modeX;
 AngleDef* modeZ;
 TrackAngleDef* trackY;
-int mode = 0;
 
+int mode = 0;
+runner modes[MODE_COUNT];
+runner activeMode;
+LED* lastLED;
 void changeMode(int direction)
 {
 	if (!modeX->isTriggerd) return;
 	mode += direction;
-	
+
 	if (mode < 0)
 	{
-		mode = 5;
+		mode = MODE_COUNT - 1;
 	}
-	else if (mode > 5)
+	else if (mode >= MODE_COUNT)
 	{
 		mode = 0;
 	}
+
+	lastLED->setRGB(0, 0, 0);
+	leds[mode]->setRGB(0xFFF, 0xFFF, 0xFFF);
+	lastLED = leds[mode];
+
 	Serial.print("Mode Changes: ");
 	Serial.println(mode);
+	activeMode = modes[mode];
+	
 }
 
 void doSetup()
@@ -42,14 +52,24 @@ void doSetup()
 		setupMode = !setupMode;
 		if (setupMode)
 		{
-			RGB_set(LED_STATUS, 0, 10, 0);
+#ifdef MODE_DEBUG
+			leds[0]->setRGB(0, 10, 0);
+#endif
 			trackY = trackAngle(&angY, 60, changeMode);
-			modeX = restrictAngle(&angX, 300, 360);
+			modeX = restrictAngle(&angZ, 0, 20);
 			Serial.println("Setup ON");
+			for (uint8_t i = 0; i < LED_AMOUNT; i++)
+			{
+				leds[i]->setRGB(0, 0, 0);
+			}
+			leds[mode]->setRGB(0xFFF, 0xFFF, 0xFFF);
+			lastLED = leds[mode];
 		}
 		else
 		{
-			RGB_set(LED_STATUS, 10, 0, 0);
+#ifdef MODE_DEBUG
+			leds[0]->setRGB(10, 0, 0);
+#endif
 			freeTrackAngleDef(trackY);
 			freeAngleDef(modeX);
 			Serial.println("Setup OFF");
@@ -64,11 +84,21 @@ void setupModes()
 	setupImpulsY = restrictImpuls(&y);
 	setupImpulsY->onTrigger = doSetup;
 
-	RGB_set(LED_STATUS, 10, 0, 0);
+#ifdef MODE_DEBUG
+	leds[0]->setRGB(10, 0, 0);
+#endif
 }
 
 void doModes()
 {
-	// MODES
-	//analogWrite(11, mode * 10);
+	if (!setupMode)
+	{
+		activeMode();
+	}
+	
+
+#ifdef MODE_DEBUG
+	if (setupX->isTriggerd) leds[1]->setRGB(10, 0, 0); else leds[1]->setRGB(0, 0, 0);
+	if (setupZ->isTriggerd) leds[2]->setRGB(10, 0, 0); else leds[2]->setRGB(0, 0, 0);
+#endif // MODE_DEBUG
 }
