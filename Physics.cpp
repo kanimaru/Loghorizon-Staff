@@ -1,5 +1,5 @@
 // 
-// 
+// Helper for register different physically events. Like Rotation to a special point.
 // 
 
 #include "Physics.h"

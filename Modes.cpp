@@ -1,50 +1,41 @@
 // 
-// 
+// Helper to change through different modes.
 // 
 
 #include "Modes.h"
-#include "Physics.h"
-#include "Hardware.h"
-#include "LED.h"
 
-AngleDef* setupX;
-AngleDef* setupZ;
-ImpulsDef* setupImpulsY;
-boolean setupMode;
+ModeHandler modeHandler = ModeHandler();
 
-AngleDef* modeX;
-AngleDef* modeZ;
-TrackAngleDef* trackY;
-
-int mode = 0;
-runner modes[MODE_COUNT];
-runner activeMode;
-LED* lastLED;
-void changeMode(int direction)
+/*
+ * Callback for changing modes.
+ */
+void ModeHandler::changeMode(int direction)
 {
-	if (!modeX->isTriggerd) return;
-	mode += direction;
+	if (!modeHandler.modeX->isTriggerd) return;
+	modeHandler.mode += direction;
 
-	if (mode < 0)
-	{
-		mode = MODE_COUNT - 1;
-	}
-	else if (mode >= MODE_COUNT)
-	{
-		mode = 0;
-	}
+	if (modeHandler.mode < 0) modeHandler.mode = MODE_COUNT - 1;
+	else if (modeHandler.mode >= MODE_COUNT) modeHandler.mode = 0;
 
-	lastLED->setRGB(0, 0, 0);
-	leds[mode]->setRGB(0xFFF, 0xFFF, 0xFFF);
-	lastLED = leds[mode];
+	modeHandler.lastLED->setRGB(0, 0, 0);
+	hardware.leds[modeHandler.mode]->setRGB(0xFFF, 0xFFF, 0xFFF);
+	modeHandler.lastLED = hardware.leds[modeHandler.mode];
 
+#ifdef MODE_DEBUG
 	Serial.print("Mode Changes: ");
-	Serial.println(mode);
-	activeMode = modes[mode];
-	
+	Serial.println(modes.mode);
+#endif //  MODE_DEBUG
+	modeHandler.activeMode = modeHandler.modes[modeHandler.mode];
+}
+void ModeHandler::wrap_changeMode(int direction)
+{
+	modeHandler.changeMode(direction);
 }
 
-void doSetup()
+/*
+ * What happens when setup is joined / leaved
+ */
+void ModeHandler::doSetup()
 {
 	// SETUP STATE CHANGE
 	if (setupX->isTriggerd && setupZ->isTriggerd)
@@ -52,18 +43,14 @@ void doSetup()
 		setupMode = !setupMode;
 		if (setupMode)
 		{
+			trackY = trackAngle(&hardware.angY, 60, ModeHandler::wrap_changeMode);
+			modeX = restrictAngle(&hardware.angZ, 0, 20);
 #ifdef MODE_DEBUG
-			leds[0]->setRGB(0, 10, 0);
-#endif
-			trackY = trackAngle(&angY, 60, changeMode);
-			modeX = restrictAngle(&angZ, 0, 20);
 			Serial.println("Setup ON");
-			for (uint8_t i = 0; i < LED_AMOUNT; i++)
-			{
-				leds[i]->setRGB(0, 0, 0);
-			}
-			leds[mode]->setRGB(0xFFF, 0xFFF, 0xFFF);
-			lastLED = leds[mode];
+#endif // MODE_DEBUG
+			hardware.turnOffLEDs();
+			hardware.leds[mode]->setRGB(0xFFF, 0xFFF, 0xFFF);
+			lastLED = hardware.leds[mode];
 		}
 		else
 		{
@@ -77,25 +64,27 @@ void doSetup()
 	}
 }
 
-void setupModes()
+void ModeHandler::setupModes()
 {
-	setupX = restrictAngle(&angX, 70, 110);
-	setupZ = restrictAngle(&angZ, 70, 110);
-	setupImpulsY = restrictImpuls(&y);
-	setupImpulsY->onTrigger = doSetup;
+	setupX = restrictAngle(&hardware.angX, 70, 110);
+	setupZ = restrictAngle(&hardware.angZ, 70, 110);
+	setupImpulsY = restrictImpuls(&hardware.y);
+	setupImpulsY->onTrigger = ModeHandler::wrap_doSetup;
 
 #ifdef MODE_DEBUG
 	leds[0]->setRGB(10, 0, 0);
 #endif
 }
 
-void doModes()
+void ModeHandler::wrap_doSetup()
+{
+	modeHandler.doSetup();
+}
+
+void ModeHandler::doModes()
 {
 	if (!setupMode)
-	{
 		activeMode();
-	}
-	
 
 #ifdef MODE_DEBUG
 	if (setupX->isTriggerd) leds[1]->setRGB(10, 0, 0); else leds[1]->setRGB(0, 0, 0);

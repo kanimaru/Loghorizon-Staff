@@ -4,33 +4,9 @@
 
 #include "Hardware.h"
 
-/*
-My min and max values for my chip.
-Min-x:243 y:261 z:268
-Max-x:421 y:420 z:422
-*/
-#ifndef ACCEL_SIMMULATE
-int minAccel[3] = { 262,261,275 };
-int maxAccel[3] = { 403,403,413 };
-#else
-const int minAccel[3] = { 0,0,0 };
-const int maxAccel[3] = { 255,255,255 };
-#endif // !ACCEL_SIMMULATE
+Hardware hardware = Hardware();
 
-// accerlated Values
-int x;
-int y;
-int z;
-
-// angle Values
-double angX;
-double angY;
-double angZ;
-
-PCA9685 chips[PCA_AMOUNT] = { 0x40, 0x41 };// , 0x42, 0x43, 0x44};
-LED* leds[LED_AMOUNT];
-
-void selfCheck()
+void Hardware::selfCheck()
 {
 	for (uint8_t i = 0; i < PCA_AMOUNT; i++)
 	{
@@ -40,8 +16,7 @@ void selfCheck()
 	}
 }
 
-
-void setupHardware()
+void Hardware::setup()
 {
 	pinMode(PIN_ACCEL_X, INPUT);
 	pinMode(PIN_ACCEL_Y, INPUT);
@@ -62,10 +37,37 @@ void setupHardware()
 	selfCheck();
 }
 
-//
-//   Calculates the x,y,z values to the angeles.
-//
-void transform(int xRead, int yRead, int zRead) {
+void Hardware::doAccel()
+{
+	int xRead = analogRead(PIN_ACCEL_X);
+	int yRead = analogRead(PIN_ACCEL_Y);
+	int zRead = analogRead(PIN_ACCEL_Z);
+
+#ifdef ACCEL_MESSURE
+	messureAccel(xRead, yRead, zRead);
+#endif // ACCEL_MESSURE
+
+	this->transform(xRead, yRead, zRead);
+
+#ifdef ACCEL_DEBUG
+	Serial.print("X:");
+	Serial.print(x);
+	Serial.print("\tY:");
+	Serial.print(y);
+	Serial.print("\tZ:");
+	Serial.print(z);
+	Serial.print("\t\taX:");
+	Serial.print(angX);
+	Serial.print("\taY:");
+	Serial.print(angY);
+	Serial.print("\taZ:");
+	Serial.println(angZ);
+#endif // ACCEL_DEBUG
+}
+
+/* Calculates the x,y,z values to the angeles. */
+void Hardware::transform(int xRead, int yRead, int zRead)
+{
 	//convert read values to degrees -90 to 90 - Needed for atan2
 	x = map(xRead, minAccel[0], maxAccel[0], -90, 90);
 	y = map(yRead, minAccel[1], maxAccel[1], -90, 90);
@@ -83,9 +85,21 @@ void transform(int xRead, int yRead, int zRead) {
 	angZ = RAD_TO_DEG * (atan2(-constY, -constX) + PI);
 }
 
-//
-// Simulates ACEL Sensor 
-//
+/* Refreshes LEDs */
+void Hardware::doLEDs()
+{
+	for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
+		chips[pca_choose].update();
+}
+
+/* Turn of every LED */
+void Hardware::turnOffLEDs()
+{
+	for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
+		chips[pca_choose].setChannel(PCA_ALL, 0);
+}
+
+/* Simulates Accel Sensor via Serial */
 #ifdef ACCEL_SIMMULATE
 int tempX = 0;
 int tempY = 0;
@@ -93,8 +107,10 @@ int tempZ = 0;
 int incomingByte = 0;
 int counter = 0;
 
-void serialIn() {
-	while (Serial.available()) {
+void Hardware::simmulateAccel()
+{
+	while (Serial.available())
+	{
 		incomingByte = Serial.read();
 
 		if (counter == 0) tempX = incomingByte;
@@ -102,7 +118,8 @@ void serialIn() {
 		else if (counter == 2) tempZ = incomingByte;
 
 		counter++;
-		if (incomingByte == 255) {
+		if (incomingByte == 255)
+		{
 			counter = 0;
 			transform(tempX, tempY, tempZ);
 		}
@@ -110,8 +127,9 @@ void serialIn() {
 }
 #endif // ACCEL_SIMMULATE
 
+/*Messure the hardware values and sends over serial*/
 #ifdef ACCEL_MESSURE
-void messureAccel(int xRead, int yRead, int zRead)
+void Hardware::messureAccel(int xRead, int yRead, int zRead)
 {
 	minAccel[0] = min(xRead, minAccel[0]);
 	minAccel[1] = min(yRead, minAccel[1]);
@@ -147,38 +165,3 @@ void messureAccel(int xRead, int yRead, int zRead)
 }
 
 #endif // ACCEL_MESSURE
-
-void readAccel() {
-	int xRead = analogRead(PIN_ACCEL_X);
-	int yRead = analogRead(PIN_ACCEL_Y);
-	int zRead = analogRead(PIN_ACCEL_Z);
-
-#ifdef ACCEL_MESSURE
-	messureAccel(xRead, yRead, zRead);
-#endif // ACCEL_MESSURE
-
-	transform(xRead, yRead, zRead);
-	
-#ifdef ACCEL_DEBUG
-	Serial.print("X:");
-	Serial.print(x);
-	Serial.print("\tY:");
-	Serial.print(y);
-	Serial.print("\tZ:");
-	Serial.print(z);
-	Serial.print("\t\taX:");
-	Serial.print(angX);
-	Serial.print("\taY:");
-	Serial.print(angY);
-	Serial.print("\taZ:");
-	Serial.println(angZ);
-#endif // ACCEL_DEBUG
-}
-
-void doLEDs()
-{
-	for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
-	{
-		chips[pca_choose].update();
-	}
-}

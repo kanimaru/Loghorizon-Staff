@@ -26,26 +26,51 @@
 #define PIN_ACCEL_Y 1
 #define PIN_ACCEL_Z 2
 
-// accerlated Values
-extern int x;
-extern int y;
-extern int z;
+class Hardware
+{
+public:
+	void setup();
 
-// angle Values
-extern double angX;
-extern double angY;
-extern double angZ;
+	void turnOffLEDs();
+	void doAccel();
+	void doLEDs();
 
-extern int ACCEL_maxVal;
-extern int ACCEL_minVal;
+	void simmulateAccel();
 
-extern PCA9685 chips[];
-extern LED* leds[];
+	PCA9685 chips[PCA_AMOUNT] = { 0x40, 0x41 };// , 0x42, 0x43, 0x44};
+	LED* leds[LED_AMOUNT];
 
-void doLEDs();
-void setupHardware();
-void readAccel();
-void serialIn();
+	// angle Values
+	double angX;
+	double angY;
+	double angZ;
+
+	// accerlated Values
+	int x;
+	int y;
+	int z;
+private:
+	/*
+	My min and max values for my chip.
+	Min-x:243 y:261 z:268
+	Max-x:421 y:420 z:422
+	*/
+#ifndef ACCEL_SIMMULATE
+	int minAccel[3] = { 262,261,275 };
+	int maxAccel[3] = { 403,403,413 };
+#else
+	const int minAccel[3] = { 0,0,0 };
+	const int maxAccel[3] = { 255,255,255 };
+#endif // !ACCEL_SIMMULATE
+
+	void transform(int xRead, int yRead, int zRead);
+	void selfCheck();
+	void messureAccel(int xRead, int yRead, int zRead);
+
+
+};
+
+extern Hardware hardware;
 
 #endif
 
