@@ -13,7 +13,7 @@
 #include "LED.h"
 #include "Hardware.h"
 
-#define MODE_COUNT 2
+#define MODE_COUNT 3
 //#define MODE_DEBUG
 
 class ModeHandler

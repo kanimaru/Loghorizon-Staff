@@ -12,14 +12,14 @@
 #include "PCA9685.h"
 #include "LED.h"
 
-//#define ACCEL_DEBUG
+#define ACCEL_DEBUG
 //#define ACCEL_MESSURE
 
-#define PCA_AMOUNT 2
+#define PCA_AMOUNT 4
 #define PCA_FREQ 1000
 #define PCA_ALL 61 // = 250 (PCA * 4 + 6 logic)
 
-#define LED_AMOUNT 10
+#define LED_AMOUNT 20
 #define SELF_CHECK_DUR 500
 
 #define PIN_ACCEL_X 0
@@ -37,7 +37,7 @@ public:
 
 	void simmulateAccel();
 
-	PCA9685 chips[PCA_AMOUNT] = { 0x40, 0x41 };// , 0x42, 0x43, 0x44};
+	PCA9685 chips[PCA_AMOUNT] = { 0x40, 0x41 , 0x42, 0x44};//, 0x44};
 	LED* leds[LED_AMOUNT];
 
 	// angle Values
