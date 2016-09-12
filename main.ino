@@ -61,11 +61,11 @@ void setup() {
 void loop() {
 	hardware.doAccel();
 	
-	handleTime();
-	doPhysics();
-	modeHandler.doModes();
+	//handleTime();
+	//doPhysics();
+	//modeHandler.doModes();
 	//doLight();
-	//doSound();
+	doSound();
 	
 	hardware.doLEDs();
 }
