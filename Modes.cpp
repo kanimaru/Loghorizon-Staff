@@ -9,7 +9,7 @@ ModeHandler modeHandler = ModeHandler();
 /*
  * Callback for changing modes.
  */
-void ModeHandler::changeMode(int direction)
+void ModeHandler::changeMode(int8_t direction)
 {
 	if (!modeHandler.modeX->isTriggerd) return;
 	modeHandler.mode += direction;
@@ -27,7 +27,7 @@ void ModeHandler::changeMode(int direction)
 #endif //  MODE_DEBUG
 	modeHandler.activeMode = modeHandler.modes[modeHandler.mode];
 }
-void ModeHandler::wrap_changeMode(int direction)
+void ModeHandler::wrap_changeMode(int8_t direction)
 {
 	modeHandler.changeMode(direction);
 }
@@ -68,7 +68,7 @@ void ModeHandler::setupModes()
 {
 	setupX = restrictAngle(&hardware.angX, 70, 110);
 	setupZ = restrictAngle(&hardware.angZ, 70, 110);
-	setupImpulsY = restrictImpuls(&hardware.y);
+	setupImpulsY = restrictImpuls(&hardware._y);
 	setupImpulsY->onTrigger = ModeHandler::wrap_doSetup;
 
 #ifdef MODE_DEBUG

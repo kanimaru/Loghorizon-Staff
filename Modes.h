@@ -26,7 +26,7 @@ public:
 	void doSetup();
 
 	// Current mode selection
-	int mode = 0;
+	int8_t mode = 0;
 	LED* lastLED;
 
 	// Helper to get into Setup
@@ -40,8 +40,8 @@ public:
 	AngleDef* modeZ;
 	TrackAngleDef* trackY;
 private:
-	void changeMode(int direction);
-	static void wrap_changeMode(int direction);
+	void changeMode(int8_t direction);
+	static void wrap_changeMode(int8_t direction);
 	static void wrap_doSetup();
 
 };

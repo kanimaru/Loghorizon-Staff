@@ -4,32 +4,29 @@
 
 #include "Ball.h"
 
-
-Ball::Ball(int16_t x, int16_t y, int16_t z, int16_t radius)
+Ball::Ball(int16_t _x, int16_t _y, int16_t _z, int16_t radius) : Selector()
 {
-	this->x = x;
-	this->y = y;
-	this->z = z;
+	this->_x = _x;
+	this->_y = _y;
+	this->_z = _z;
 	_radius = radius;
 	_radius2 = pow(radius, 2);
+	_collect();
 }
 
-boolean Ball::isIn(int16_t x, int16_t y, int16_t z)
+void Ball::setRadius(int16_t radius)
 {
-	return pow(x - x, 2) + pow(y - y, 2) + pow(z - z, 2) < _radius2;
+	_radius = radius;
+	_radius2 = pow(radius, 2);
+	_collect();
 }
 
-int16_t Ball::dist(int16_t x, int16_t y, int16_t z)
+boolean Ball::isIn(int16_t _x, int16_t _y, int16_t _z)
 {
-	return sqrt(pow(this->x - x, 2) + pow(this->y - y, 2) + pow(this->z - z, 2)) - _radius;
+	return pow(this->_x - _x, 2) + pow(this->_y - _y, 2) + pow(this->_z - _z, 2) < _radius2;
 }
 
-void Ball::debug()
+int16_t Ball::dist(int16_t _x, int16_t _y, int16_t _z)
 {
-	Serial.print("x: ");
-	Serial.print(x);
-	Serial.print(" y: ");
-	Serial.print(y);
-	Serial.print(" z: ");
-	Serial.println(z);
+	return sqrt(pow(this->_x - _x, 2) + pow(this->_y - _y, 2) + pow(this->_z - _z, 2)) - _radius;
 }

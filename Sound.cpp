@@ -1,7 +1,8 @@
 // 
 // 
 // 
-
+/*
+#include "Hardware.h"
 #include "Sound.h"
 #include "Timer.h"
 #include <avr/pgmspace.h>
@@ -19,15 +20,25 @@ const PROGMEM uint16_t melody[] = {
 
 void setupSound()
 {
-	pinMode(2, OUTPUT);//buzzer
-	pinMode(3, OUTPUT);//buzzer
-	pinMode(4, OUTPUT);//buzzer
-	pinMode(5, OUTPUT);//buzzer
-	
 	uint8_t device;
 	uint16_t mel;
 	uint16_t temp;
 	uint16_t size = 358;
+
+	hardware.sound.begin();
+	hardware.sound.setFrequency(200);
+	for (int i = 0; i < 0XFFF; i+=1)
+	{
+		hardware.sound.setChannel(1, 0);
+		hardware.sound.setChannel(2, 0);
+		delay(10);
+		hardware.sound.setChannel(1, i);
+		hardware.sound.setChannel(2, 0xfff-i);
+
+	}
+
+
+	
 
 	// iterate over the notes of the melody:
 	for (int thisNote = START; thisNote < size; thisNote++)
@@ -35,16 +46,24 @@ void setupSound()
 		mel = pgm_read_word_near(melody + thisNote);
 		temp = pgm_read_word_near(delays + thisNote);
 
-		device = (mel >> 13) + 2;
+		device = (mel >> 13);
 		mel = mel & 0b0001111111111111;
+		
 		Serial.print("Device: ");
 		Serial.print(device);
 		Serial.print(" Mel: ");
 		Serial.print(mel);
 		Serial.print(" Tempo: ");
 		Serial.println(temp);
-		if (mel == 0) noTone(device);
-		else tone(device, mel);
+		if (mel == 0)
+		{
+			hardware.sound.setChannel(device, 0);
+		}
+		else
+		{
+			hardware.sound.setChannel(PCA_ALL, 0x7FF);
+			hardware.sound.setFrequency(mel);
+		}
 		delay(temp);
 		// stop the tone playing:
 		
@@ -54,3 +73,4 @@ void setupSound()
 void doSound()
 {
 }
+*/

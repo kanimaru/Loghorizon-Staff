@@ -19,15 +19,15 @@ void setupFire()
 
 	// pre calculate
 	for (uint8_t i = 0; i < LED_AMOUNT; i++) {
-		minZ = min(hardware.leds[i]->z, minZ);
-		maxZ = max(hardware.leds[i]->z, maxZ);
+		minZ = min(hardware.leds[i]->_z, minZ);
+		maxZ = max(hardware.leds[i]->_z, maxZ);
 	}
 
 	int diffZ = maxZ - minZ;
 	// real calculation
 	for (uint8_t i = 0; i < LED_AMOUNT; i++)
 	{
-		multiplier[i] = (100 * hardware.leds[i]->z / maxZ);
+		multiplier[i] = (100 * hardware.leds[i]->_z / maxZ);
 	}
 }
 

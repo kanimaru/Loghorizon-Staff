@@ -19,6 +19,12 @@
     <Filter Include="Header Files\Magic">
       <UniqueIdentifier>{5f083251-603f-4e71-be10-cc3c1f6bdae4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Selector">
+      <UniqueIdentifier>{beff1024-efba-4012-999f-b2e7ea5a6676}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Selector">
+      <UniqueIdentifier>{a1876317-8d15-446a-89b9-e51f0ded2910}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="main.ino" />
@@ -48,17 +54,26 @@
     <ClCompile Include="Physics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Ball.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LED.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Gravity.cpp">
-      <Filter>Source Files\Magic</Filter>
-    </ClCompile>
     <ClCompile Include="Fire.cpp">
       <Filter>Source Files\Magic</Filter>
+    </ClCompile>
+    <ClCompile Include="PCA9685_LED.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scan.cpp">
+      <Filter>Source Files\Magic</Filter>
+    </ClCompile>
+    <ClCompile Include="Ball.cpp">
+      <Filter>Source Files\Selector</Filter>
+    </ClCompile>
+    <ClCompile Include="Cube.cpp">
+      <Filter>Source Files\Selector</Filter>
+    </ClCompile>
+    <ClCompile Include="Selector.cpp">
+      <Filter>Source Files\Selector</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,17 +104,26 @@
     <ClInclude Include="Physics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Ball.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LED.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Gravity.h">
-      <Filter>Header Files\Magic</Filter>
-    </ClInclude>
     <ClInclude Include="Fire.h">
       <Filter>Header Files\Magic</Filter>
+    </ClInclude>
+    <ClInclude Include="PCA9685_LED.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scan.h">
+      <Filter>Header Files\Magic</Filter>
+    </ClInclude>
+    <ClInclude Include="Ball.h">
+      <Filter>Header Files\Selector</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>Header Files\Selector</Filter>
+    </ClInclude>
+    <ClInclude Include="Selector.h">
+      <Filter>Header Files\Selector</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

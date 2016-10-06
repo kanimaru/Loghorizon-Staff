@@ -28,15 +28,14 @@ public:
 
 	uint16_t getChannel(uint8_t channel);
 
-	void update();
-	LED leds[5];
-
-private:
+protected:
 	uint8_t _address;
-	void _setPreScale(uint8_t prescale);
-	void _setChannels(uint8_t start, uint8_t end, uint16_t* values);
 	uint8_t _read8bits(uint8_t addr);
 	void _write8bits(uint8_t reg, uint8_t value);
+
+private:
+	void _setPreScale(uint8_t prescale);
+	void _setChannels(uint8_t start, uint8_t end, uint16_t* values);
 
 };
 #endif

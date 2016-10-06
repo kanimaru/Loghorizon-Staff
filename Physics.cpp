@@ -11,11 +11,11 @@ TrackAngleDef trackRegisters[MAX_TRACK_DEFS];
 
 void setupPhysics()
 {
-	for (int i = 0; i < MAX_ANGLE_DEFS; i++)
+	for (uint8_t i = 0; i < MAX_ANGLE_DEFS; i++)
 		freeAngleDef(&angleRegisters[i]);
-	for (int i = 0; i < MAX_IMPULS_DEFS; i++)
+	for (uint8_t i = 0; i < MAX_IMPULS_DEFS; i++)
 		freeImpulsDef(&impulsRegisters[i]);
-	for (int i = 0; i < MAX_TRACK_DEFS; i++)
+	for (uint8_t i = 0; i < MAX_TRACK_DEFS; i++)
 		freeTrackAngleDef(&trackRegisters[i]);
 }
 
@@ -123,7 +123,7 @@ void doPhysics()
 	}
 }
 
-ImpulsDef* restrictImpuls(int* ref)
+ImpulsDef* restrictImpuls(int8_t* ref)
 {
 	for (int i = 0; i < MAX_IMPULS_DEFS; i++)
 	{
@@ -140,7 +140,7 @@ ImpulsDef* restrictImpuls(int* ref)
 	return nullptr;
 }
 
-AngleDef * restrictAngle(double* ref, int min, int max)
+AngleDef * restrictAngle(double* ref, int8_t min, int8_t max)
 {
 	for (int i = 0; i < MAX_ANGLE_DEFS; i++)
 	{
@@ -159,7 +159,7 @@ AngleDef * restrictAngle(double* ref, int min, int max)
 	return nullptr;
 }
 
-TrackAngleDef* trackAngle(double* ref, int resolutions, tracker cb)
+TrackAngleDef* trackAngle(double* ref, int8_t resolutions, tracker cb)
 {
 	for (int i = 0; i < MAX_TRACK_DEFS; i++)
 	{

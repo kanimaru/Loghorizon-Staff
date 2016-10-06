@@ -1,7 +1,7 @@
-// Gravity.h
+// AccelMode.h
 
-#ifndef _GRAVITY_h
-#define _GRAVITY_h
+#ifndef _ACCELMODE_h
+#define _ACCELMODE_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "arduino.h"
@@ -9,7 +9,7 @@
 	#include "WProgram.h"
 #endif
 
-void doGravity();
+void doAccel();
 
 #endif
 

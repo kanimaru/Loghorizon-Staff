@@ -39,9 +39,9 @@ void Hardware::setup()
 
 void Hardware::doAccel()
 {
-	int xRead = analogRead(PIN_ACCEL_X);
-	int yRead = analogRead(PIN_ACCEL_Y);
-	int zRead = analogRead(PIN_ACCEL_Z);
+	int8_t xRead = analogRead(PIN_ACCEL_X);
+	int8_t yRead = analogRead(PIN_ACCEL_Y);
+	int8_t zRead = analogRead(PIN_ACCEL_Z);
 
 #ifdef ACCEL_MESSURE
 	messureAccel(xRead, yRead, zRead);
@@ -51,11 +51,11 @@ void Hardware::doAccel()
 
 #ifdef ACCEL_DEBUG
 	Serial.print("X:");
-	Serial.print(x);
+	Serial.print(_x);
 	Serial.print("\tY:");
-	Serial.print(y);
+	Serial.print(_y);
 	Serial.print("\tZ:");
-	Serial.print(z);
+	Serial.print(_z);
 	Serial.print("\t\taX:");
 	Serial.print(angX);
 	Serial.print("\taY:");
@@ -66,16 +66,16 @@ void Hardware::doAccel()
 }
 
 /* Calculates the x,y,z values to the angeles. */
-void Hardware::transform(int xRead, int yRead, int zRead)
+void Hardware::transform(uint8_t xRead, uint8_t yRead, uint8_t zRead)
 {
 	//convert read values to degrees -90 to 90 - Needed for atan2
-	x = map(xRead, minAccel[0], maxAccel[0], -90, 90);
-	y = map(yRead, minAccel[1], maxAccel[1], -90, 90);
-	z = map(zRead, minAccel[2], maxAccel[2], -90, 90);
+	_x = map(xRead, minAccel[0], maxAccel[0], -90, 90) - offsetX;
+	_y = map(yRead, minAccel[1], maxAccel[1], -90, 90) - offsetY;
+	_z = map(zRead, minAccel[2], maxAccel[2], -90, 90) - offsetZ;
 
-	int constX = constrain(x, -90, 90);
-	int constY = constrain(y, -90, 90);
-	int constZ = constrain(z, -90, 90);
+	int8_t constX = constrain(_x, -90, 90);
+	int8_t constY = constrain(_y, -90, 90);
+	int8_t constZ = constrain(_z, -90, 90);
 
 	//Caculate 360deg values like so: atan2(-yAng, -zAng)
 	//atan2 outputs the value of -π to π (radians)
@@ -129,7 +129,7 @@ void Hardware::simmulateAccel()
 
 /*Messure the hardware values and sends over serial*/
 #ifdef ACCEL_MESSURE
-void Hardware::messureAccel(int xRead, int yRead, int zRead)
+void Hardware::messureAccel(uint8_t xRead, uint8_t yRead, uint8_t zRead)
 {
 	minAccel[0] = min(xRead, minAccel[0]);
 	minAccel[1] = min(yRead, minAccel[1]);

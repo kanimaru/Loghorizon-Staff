@@ -9,9 +9,9 @@
 #include "WProgram.h"
 #endif
 
-#define MAX_ANGLE_DEFS 5
-#define MAX_IMPULS_DEFS 5
-#define MAX_TRACK_DEFS 5
+#define MAX_ANGLE_DEFS 1
+#define MAX_IMPULS_DEFS 1
+#define MAX_TRACK_DEFS 1
 
 #define MIN_TIME 50
 #define POS_TIMEOUT 100
@@ -19,21 +19,21 @@
 
 typedef void(*runner)();
 typedef void(*trigger)();
-typedef void(*tracker)(int direction);
+typedef void(*tracker)(int8_t direction);
 
 struct AngleDef
 {
 	boolean assigned;
 	boolean active;
 
-	int min;
-	int max;
+	int8_t min;
+	int8_t max;
 
 	double* ref;
 
-	int curTime;
-	int minTime;
-	int maxTime;
+	int8_t curTime;
+	int8_t minTime;
+	int8_t maxTime;
 
 	trigger onTrigger;
 	runner onRun;
@@ -47,11 +47,11 @@ struct ImpulsDef
 	boolean assigned;
 	boolean active;
 
-	int* ref;
+	int8_t* ref;
 	boolean isTriggerd;
 	trigger onTrigger;
 
-	int timeout;
+	int8_t timeout;
 };
 
 struct TrackAngleDef
@@ -63,16 +63,16 @@ struct TrackAngleDef
 	double last;
 	double abs;
 	double inertia;
-	int resolutions;
+	int8_t resolutions;
 	tracker callback;
 };
 
 void doPhysics();
 void setupPhysics();
 
-ImpulsDef* restrictImpuls(int* ref);
-AngleDef* restrictAngle(double* ref, int min, int max);
-TrackAngleDef* trackAngle(double* ref, int resolutions, tracker cb);
+ImpulsDef* restrictImpuls(int8_t* ref);
+AngleDef* restrictAngle(double* ref, int8_t min, int8_t max);
+TrackAngleDef* trackAngle(double* ref, int8_t resolutions, tracker cb);
 
 void freeAngleDef(AngleDef* def);
 void freeImpulsDef(ImpulsDef* def);
