@@ -9,74 +9,113 @@
 #include "WProgram.h"
 #endif
 
-#define MAX_ANGLE_DEFS 1
-#define MAX_IMPULS_DEFS 1
-#define MAX_TRACK_DEFS 1
+//#define DEBUG_TRACK
 
-#define MIN_TIME 50
+#define MAX_ANGLE_DEFS 3
+#define MAX_IMPULS_DEFS 3
+#define MAX_TRACK_DEFS 3
+
+#define MIN_TIME 20
 #define POS_TIMEOUT 100
-#define POS_OFFSET 50
+#define POS_OFFSET 5
 
-typedef void(*runner)();
-typedef void(*trigger)();
-typedef void(*tracker)(int8_t direction);
-
-struct AngleDef
+class Definition
 {
-	boolean assigned;
-	boolean active;
+public:
+	virtual void calculate() = 0;
 
-	int8_t min;
-	int8_t max;
+};
 
-	double* ref;
+class Physics
+{
+public:
+	void init();
 
-	int8_t curTime;
-	int8_t minTime;
-	int8_t maxTime;
+	void add(Definition* def);
+	void free(Definition* def);
 
-	trigger onTrigger;
-	runner onRun;
+	void doPhysics();
+private:
+	Definition* definitions[10];
+};
+
+class Runner
+{
+public:
+	virtual void onRun() = 0;
+};
+
+class Trigger
+{
+public:
+	virtual void onTrigger() = 0;
+};
+
+class Tracker
+{
+public:
+	virtual void onTrack(int8_t direction) = 0;
+};
+
+class AngleDef : public Definition
+{
+public:
+	void init(int8_t* ref, int8_t min, int8_t max);
+	void calculate();
 
 	boolean isInRange;
 	boolean isTriggerd;
-};
 
-struct ImpulsDef
-{
-	boolean assigned;
+	Trigger* onTrigger;
+	Runner* onRun;
 	boolean active;
 
-	int8_t* ref;
-	boolean isTriggerd;
-	trigger onTrigger;
+private:
 
+
+	int16_t min;
+	int16_t max;
+
+	int8_t* ref;
+
+	int16_t curTime;
+	int16_t minTime;
+	int16_t maxTime;
+};
+
+class ImpulsDef : public Definition
+{
+public:
+	void init(int8_t* ref);
+	void calculate();
+	boolean isTriggerd;
+	Trigger* onTrigger;
+	boolean active;
+
+private:
+	int8_t* ref;
 	int8_t timeout;
 };
 
-struct TrackAngleDef
+class TrackAngleDef : public Definition
 {
-	boolean assigned;
+public:
+	void init(int8_t* refX, int8_t* refY, int8_t resolutions, Tracker* cb);
+	void calculate();
+	Tracker* callback;
 	boolean active;
 
-	double* ref;
+private:
+
+	int8_t* refX;
+	int8_t* refY;
 	double last;
 	double abs;
 	double inertia;
 	int8_t resolutions;
-	tracker callback;
 };
 
-void doPhysics();
-void setupPhysics();
-
-ImpulsDef* restrictImpuls(int8_t* ref);
-AngleDef* restrictAngle(double* ref, int8_t min, int8_t max);
-TrackAngleDef* trackAngle(double* ref, int8_t resolutions, tracker cb);
-
-void freeAngleDef(AngleDef* def);
-void freeImpulsDef(ImpulsDef* def);
-void freeTrackAngleDef(TrackAngleDef* def);
+extern Physics physics;
 
 #endif
 

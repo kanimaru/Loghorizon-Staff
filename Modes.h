@@ -1,7 +1,7 @@
 // ModeHandler.h
 
-#ifndef _MODE_HANDLER_h
-#define _MODE_HANDLER_h
+#ifndef _MODE_h
+#define _MODE_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "arduino.h"
@@ -9,44 +9,47 @@
 	#include "WProgram.h"
 #endif
 
+#include "Fire.h"
+#include "LightningBall.h"
+#include "Scan.h"
+#include "Hypnotic.h"
+#include "ColorChanger.h"
 #include "Physics.h"
 #include "LED.h"
-#include "Hardware.h"
+#include "Defines.h"
+#include "Ball.h"
 
-#define MODE_COUNT 3
-//#define MODE_DEBUG
-
-class ModeHandler
+class Modes : public Trigger, Tracker
 {
 public:
-	void setupModes();
+	void init();
 	void doModes();
-	runner modes[MODE_COUNT];
-	runner activeMode;
-	void doSetup();
+	Effect* activeMode;
+
+	void onTrack(int8_t direction);
+	void onTrigger();
+	void singleTap();
+	void doubleTap();
+	
+	void animate(Ball* selector, uint16_t range, LED* target, int8_t direction);
+private:
+	Effect* effects[EFFECT_COUNT];
 
 	// Current mode selection
 	int8_t mode = 0;
 	LED* lastLED;
 
 	// Helper to get into Setup
-	AngleDef* setupX;
-	AngleDef* setupZ;
-	ImpulsDef* setupImpulsY;
+	AngleDef setupY = AngleDef();
+	ImpulsDef setupImpulsY = ImpulsDef();
 	boolean setupMode;
 
-	// Helper to change the modis
-	AngleDef* modeX;
-	AngleDef* modeZ;
-	TrackAngleDef* trackY;
-private:
-	void changeMode(int8_t direction);
-	static void wrap_changeMode(int8_t direction);
-	static void wrap_doSetup();
-
+	// Shows wich LED is for which Mode;
+	LED* modeLed[EFFECT_COUNT];
+	Ball ballSelector = Ball(0, 0, 0, MODE_ANIMATE_RANGE);
 };
 
-extern ModeHandler modeHandler;
+extern Modes modes;
 
 #endif
 

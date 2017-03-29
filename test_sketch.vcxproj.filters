@@ -33,9 +33,6 @@
     <ClCompile Include="Hardware.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Modes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,9 +41,6 @@
     </ClCompile>
     <ClCompile Include="PCA9685.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Light.cpp">
-      <Filter>Source Files\Magic</Filter>
     </ClCompile>
     <ClCompile Include="Hypnotic.cpp">
       <Filter>Source Files\Magic</Filter>
@@ -75,12 +69,24 @@
     <ClCompile Include="Selector.cpp">
       <Filter>Source Files\Selector</Filter>
     </ClCompile>
+    <ClCompile Include="LightningBall.cpp">
+      <Filter>Source Files\Magic</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Effect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Kani\Documents\Arduino\libraries\SparkFun_ADXL345_Arduino_Library\ADXL345.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ColorChanger.cpp">
+      <Filter>Source Files\Magic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hardware.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="__vm\.Loghorizon-Staff.vsarduino.h">
@@ -94,9 +100,6 @@
     </ClInclude>
     <ClInclude Include="PCA9685.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Light.h">
-      <Filter>Header Files\Magic</Filter>
     </ClInclude>
     <ClInclude Include="Hypnotic.h">
       <Filter>Header Files\Magic</Filter>
@@ -124,6 +127,24 @@
     </ClInclude>
     <ClInclude Include="Selector.h">
       <Filter>Header Files\Selector</Filter>
+    </ClInclude>
+    <ClInclude Include="LightningBall.h">
+      <Filter>Header Files\Magic</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Effect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="c:\Users\Kani\Documents\Arduino\libraries\SparkFun_ADXL345_Arduino_Library\ADXL345.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorChanger.h">
+      <Filter>Header Files\Magic</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

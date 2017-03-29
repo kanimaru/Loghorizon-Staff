@@ -17,6 +17,23 @@ public:
 	PCA9685_LED(uint8_t address);
 	void update();
 	LED leds[5];
+	
+
+	void play(uint16_t note, uint16_t duration);
+	void stop();
+	void updateFreq(uint16_t freq);
+	boolean isPlaying();
+private:
+	struct Sound
+	{
+		uint8_t enabled : 1,
+			update : 1,
+			updateFreq : 1,
+			endless : 1;
+		int16_t duration;
+		uint16_t freq;
+	} sound;
+
 };
 
 

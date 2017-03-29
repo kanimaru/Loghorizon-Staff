@@ -4,48 +4,24 @@
 
 #include "Fire.h"
 #include "Hardware.h"
-#include "Timer.h"
+#include "Modes.h"
 
-const uint16_t min_intensity = 0x00F;
-const uint16_t max_intensity = 0x06F;
-int simDelay;
 
-uint16_t temperature[LED_AMOUNT];
-uint16_t multiplier[LED_AMOUNT];
-int minZ = 3000, maxZ = -3000;
-
-void setupFire()
+void Effect_Fire::doIt()
 {
+	uint16_t x = hardware._x / 2;
+	uint16_t y = hardware._y / 2;
+	uint16_t z = hardware._z / 2;
 
-	// pre calculate
-	for (uint8_t i = 0; i < LED_AMOUNT; i++) {
-		minZ = min(hardware.leds[i]->_z, minZ);
-		maxZ = max(hardware.leds[i]->_z, maxZ);
-	}
+	ballSelector.move(x, y, z);
 
-	int diffZ = maxZ - minZ;
-	// real calculation
-	for (uint8_t i = 0; i < LED_AMOUNT; i++)
-	{
-		multiplier[i] = (100 * hardware.leds[i]->_z / maxZ);
-	}
+	restrictBall(&ballSelector);
+	modes.animate(&ballSelector, FIRE_ANIMATE_RANGE, nullptr, 1);
 }
 
-void doFire()
+void Effect_Fire::restrictBall(Ball* ball)
 {
-	simDelay += diff;
-	if (simDelay > 100)
-	{
-		for (uint8_t i = 0; i < LED_AMOUNT; i++)
-		{
-			if (random(0, 100) > 60)
-			{
-				uint8_t intensity = map(multiplier[i], 0, maxZ, 0x00F, 0xFFF);
-				intensity += random(-0x0FF, 0x0FF);
-
-				hardware.leds[i]->setRGB(intensity, intensity / 10, 0);
-			}
-		}
-		simDelay = 0;
-	}
+	ball->setX(constrain(ball->getX(), 0, 100));
+	ball->setY(constrain(ball->getY(), 0, 100));
+	ball->setZ(constrain(ball->getZ(), -10, 10));
 }

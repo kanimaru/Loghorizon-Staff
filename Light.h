@@ -9,8 +9,23 @@
 	#include "WProgram.h"
 #endif
 
-void setupLight();
-void doLight();
+#include "Physics.h"
+#include "Effect.h"
+#include "Hardware.h"
+
+class Light : public Trigger
+{
+public:
+	void init();
+	void onTrigger();
+private:
+	AngleDef lightY;
+	ImpulsDef lightImpulsY;
+	Effect* oldMode = nullptr;
+	boolean entered = 0;
+};
+
+extern Light light;
 
 #endif
 

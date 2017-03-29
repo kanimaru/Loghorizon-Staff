@@ -3,24 +3,36 @@
 // 
 
 #include "Hardware.h"
+#include "Modes.h"
+#include "Sound.h"
 
 Hardware hardware = Hardware();
 
-void Hardware::selfCheck()
+void Hardware::init()
 {
-	for (uint8_t i = 0; i < PCA_AMOUNT; i++)
-	{
-		chips[i].setChannel(PCA_ALL, 0xFFF);
-		delay(SELF_CHECK_DUR);
-		chips[i].setChannel(PCA_ALL, 0);
-	}
-}
 
-void Hardware::setup()
-{
-	pinMode(PIN_ACCEL_X, INPUT);
-	pinMode(PIN_ACCEL_Y, INPUT);
-	pinMode(PIN_ACCEL_Z, INPUT);
+	adxl.powerOn();
+	adxl.setRangeSetting(8);
+	adxl.setInactivityXYZ(1, 0, 0);     // Set to detect inactivity in all the axes "adxl.setInactivityXYZ(X, Y, Z);" (1 == ON, 0 == OFF)
+	adxl.setInactivityThreshold(75);    // 62.5mg per increment   // Set inactivity // Inactivity thresholds (0-255)
+	adxl.setTimeInactivity(10);         // How many seconds of no activity is inactive?
+
+	adxl.setActivityXYZ(1, 1, 1);       // Set to activate movement detection in the axes "adxl.setActivityXYZ(X, Y, Z);" (1 == ON, 0 == OFF)
+	adxl.setActivityThreshold(30);      // 62.5mg per increment   // Set activity   // Inactivity thresholds (0-255)
+	
+	adxl.setTapDetectionOnXYZ(0, 0, 1); // Detect taps in the directions turned ON "adxl.setTapDetectionOnX(X, Y, Z);" (1 == ON, 0 == OFF)
+										// Set values for what is considered a TAP and what is a DOUBLE TAP (0-255)
+	adxl.setTapThreshold(50);           // 62.5 mg per increment
+	adxl.setTapDuration(15);            // 625 μs per increment
+	adxl.setDoubleTapLatency(80);       // 1.25 ms per increment
+	adxl.setDoubleTapWindow(200);       // 1.25 ms per increment
+
+	adxl.doubleTapINT(1);
+	adxl.singleTapINT(1);
+	adxl.InactivityINT(1);
+	adxl.ActivityINT(1);
+
+	adxl.setAxisOffset(-10, 0, 0);
 
 	// Chips
 	for (uint8_t i = 0; i < PCA_AMOUNT; i++)
@@ -34,21 +46,41 @@ void Hardware::setup()
 			leds[i * 5 + l] = &chips[i].leds[l];
 		}
 	}
+
 	selfCheck();
 }
 
+void Hardware::selfCheck()
+{
+	for (uint8_t i = 0; i < PCA_AMOUNT; i++)
+	{
+		chips[i].setChannel(PCA_ALL, 0xFFF);
+		delay(SELF_CHECK_DUR);
+		chips[i].setChannel(PCA_ALL, 0);
+	}
+}
+
+
 void Hardware::doAccel()
 {
-	int8_t xRead = analogRead(PIN_ACCEL_X);
-	int8_t yRead = analogRead(PIN_ACCEL_Y);
-	int8_t zRead = analogRead(PIN_ACCEL_Z);
+	int x, y, z;
+	adxl.readAccel(&x, &y, &z);
+	_flatX[_pos] = x + _xOffset;
+	_flatY[_pos] = y + _yOffset;
+	_flatZ[_pos] = z + _zOffset;
+	_pos = _pos++ % SMOOTHNESS;
 
-#ifdef ACCEL_MESSURE
-	messureAccel(xRead, yRead, zRead);
-#endif // ACCEL_MESSURE
+	_x = 0;
+	_y = 0;
+	_z = 0;
 
-	this->transform(xRead, yRead, zRead);
-
+	for (uint8_t i = 0; i < SMOOTHNESS; i++)
+	{
+		_x += _flatX[i] / SMOOTHNESS;
+		_y += _flatY[i] / SMOOTHNESS;
+		_z += _flatZ[i] / SMOOTHNESS;
+	}
+	
 #ifdef ACCEL_DEBUG
 	Serial.print("X:");
 	Serial.print(_x);
@@ -56,33 +88,33 @@ void Hardware::doAccel()
 	Serial.print(_y);
 	Serial.print("\tZ:");
 	Serial.print(_z);
-	Serial.print("\t\taX:");
-	Serial.print(angX);
-	Serial.print("\taY:");
-	Serial.print(angY);
-	Serial.print("\taZ:");
-	Serial.println(angZ);
+	Serial.println(inactivity ? "Inactive" : "Active");
 #endif // ACCEL_DEBUG
-}
 
-/* Calculates the x,y,z values to the angeles. */
-void Hardware::transform(uint8_t xRead, uint8_t yRead, uint8_t zRead)
-{
-	//convert read values to degrees -90 to 90 - Needed for atan2
-	_x = map(xRead, minAccel[0], maxAccel[0], -90, 90) - offsetX;
-	_y = map(yRead, minAccel[1], maxAccel[1], -90, 90) - offsetY;
-	_z = map(zRead, minAccel[2], maxAccel[2], -90, 90) - offsetZ;
-
-	int8_t constX = constrain(_x, -90, 90);
-	int8_t constY = constrain(_y, -90, 90);
-	int8_t constZ = constrain(_z, -90, 90);
-
-	//Caculate 360deg values like so: atan2(-yAng, -zAng)
-	//atan2 outputs the value of -π to π (radians)
-	//We are then converting the radians to degrees
-	angX = RAD_TO_DEG * (atan2(-constY, -constZ) + PI);
-	angY = RAD_TO_DEG * (atan2(-constX, -constZ) + PI);
-	angZ = RAD_TO_DEG * (atan2(-constY, -constX) + PI);
+	byte interrupts = adxl.getInterruptSource();
+	if (adxl.triggered(interrupts, ADXL345_INACTIVITY))
+	{
+		_inactivity = true;
+		_inactiveCounter = 0;
+	}
+	if (adxl.triggered(interrupts, ADXL345_ACTIVITY))
+	{
+		if (inactive)
+		{
+			turnOn();
+		}
+		_inactivity = false;
+		inactive = false;
+		
+	}
+	if (adxl.triggered(interrupts, ADXL345_DOUBLE_TAP))
+	{
+		modes.doubleTap();
+	} else if (adxl.triggered(interrupts, ADXL345_SINGLE_TAP))
+	{
+		modes.singleTap();
+	}
+	
 }
 
 /* Refreshes LEDs */
@@ -95,73 +127,55 @@ void Hardware::doLEDs()
 /* Turn of every LED */
 void Hardware::turnOffLEDs()
 {
-	for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
-		chips[pca_choose].setChannel(PCA_ALL, 0);
+	for (uint8_t i = 0; i < LED_AMOUNT; i++)
+		leds[i]->setRGB(0, 0, 0);
+
+	//for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
+	//	chips[pca_choose].setChannel(PCA_ALL, 0);
 }
 
-/* Simulates Accel Sensor via Serial */
-#ifdef ACCEL_SIMMULATE
-int tempX = 0;
-int tempY = 0;
-int tempZ = 0;
-int incomingByte = 0;
-int counter = 0;
-
-void Hardware::simmulateAccel()
+void Hardware::doCheckInactivity()
 {
-	while (Serial.available())
+	if (_inactivity && !inactive && _inactivityEnabled)
 	{
-		incomingByte = Serial.read();
-
-		if (counter == 0) tempX = incomingByte;
-		else if (counter == 1) tempY = incomingByte;
-		else if (counter == 2) tempZ = incomingByte;
-
-		counter++;
-		if (incomingByte == 255)
+		_inactiveCounter += diff;
+		if (_inactiveCounter > 10000)
 		{
-			counter = 0;
-			transform(tempX, tempY, tempZ);
+			inactive = true;
+			turnOff();
 		}
 	}
 }
-#endif // ACCEL_SIMMULATE
 
-/*Messure the hardware values and sends over serial*/
-#ifdef ACCEL_MESSURE
-void Hardware::messureAccel(uint8_t xRead, uint8_t yRead, uint8_t zRead)
+void Hardware::doTime()
 {
-	minAccel[0] = min(xRead, minAccel[0]);
-	minAccel[1] = min(yRead, minAccel[1]);
-	minAccel[2] = min(zRead, minAccel[2]);
-
-	maxAccel[0] = max(xRead, maxAccel[0]);
-	maxAccel[1] = max(yRead, maxAccel[1]);
-	maxAccel[2] = max(zRead, maxAccel[2]);
-
-	Serial.print("Cur-");
-	Serial.print("x:");
-	Serial.print(xRead);
-	Serial.print("\ty:");
-	Serial.print(yRead);
-	Serial.print("\tz:");
-	Serial.print(zRead);
-
-	Serial.print("\tMin-");
-	Serial.print("x:");
-	Serial.print(minAccel[0]);
-	Serial.print("\ty:");
-	Serial.print(minAccel[1]);
-	Serial.print("\tz:");
-	Serial.print(minAccel[2]);
-
-	Serial.print("\tMax-");
-	Serial.print("x:");
-	Serial.print(maxAccel[0]);
-	Serial.print("\ty:");
-	Serial.print(maxAccel[1]);
-	Serial.print("\tz:");
-	Serial.println(maxAccel[2]);
+	ms = millis();
+	diff = (uint8_t)(ms - last);
+	last = ms;
 }
 
-#endif // ACCEL_MESSURE
+void Hardware::turnOff()
+{
+	sound.sleep();
+	for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
+		chips[pca_choose].sleep();
+
+}
+
+void Hardware::turnOn()
+{
+	for (uint8_t pca_choose = 0; pca_choose < PCA_AMOUNT; pca_choose++)
+		chips[pca_choose].wake();
+
+	sound.wake();
+}
+
+void Hardware::disableInactive()
+{
+	_inactivityEnabled = false;
+}
+
+void Hardware::enableInactive()
+{
+	_inactivityEnabled = true;
+}

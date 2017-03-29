@@ -9,8 +9,6 @@
 	#include "WProgram.h"
 #endif
 
-#include "LED.h"
-#include "Hardware.h"
 #include "Selector.h"
 
 class Cube : public Selector

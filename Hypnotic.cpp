@@ -6,8 +6,7 @@
 #include "Hypnotic.h"
 #include "Hardware.h"
 
-double sinX = 0.01;
-void doHypnotic()
+void Effect_Hypnotic::doIt()
 {
 	for (int i = 0; i < LED_AMOUNT; i++)
 	{

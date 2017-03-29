@@ -3,213 +3,197 @@
 // 
 
 #include "Physics.h"
-#include "Timer.h"
+#include "Defines.h"
+#include "Hardware.h"
 
-AngleDef angleRegisters[MAX_ANGLE_DEFS];
-ImpulsDef impulsRegisters[MAX_IMPULS_DEFS];
-TrackAngleDef trackRegisters[MAX_TRACK_DEFS];
+Physics physics;
 
-void setupPhysics()
+void ImpulsDef::init(int8_t* ref)
 {
-	for (uint8_t i = 0; i < MAX_ANGLE_DEFS; i++)
-		freeAngleDef(&angleRegisters[i]);
-	for (uint8_t i = 0; i < MAX_IMPULS_DEFS; i++)
-		freeImpulsDef(&impulsRegisters[i]);
-	for (uint8_t i = 0; i < MAX_TRACK_DEFS; i++)
-		freeTrackAngleDef(&trackRegisters[i]);
+	this->ref = ref;
+	active = true;
+	onTrigger = nullptr;
+	isTriggerd = false;
 }
 
-void doPhysics()
+void ImpulsDef::calculate()
 {
-	// ANGLES
-	for (int i = 0; i < MAX_ANGLE_DEFS; i++)
+	if (!active) return;
+
+	if (*ref > POS_OFFSET) // anti schwingung
+		timeout = POS_TIMEOUT;
+
+	if (*ref < -POS_OFFSET && timeout > 0 && !isTriggerd)
 	{
-		AngleDef* def = &angleRegisters[i];
-		if (!def->assigned || !def->active) continue;
-
-		if (*def->ref < def->max &&
-			*def->ref > def->min)
+		if (onTrigger != nullptr)
 		{
-			def->isInRange = true;
-
-			if (def->curTime < def->maxTime) def->curTime += diff;
-			if (def->curTime > def->maxTime) def->curTime = def->maxTime;
-
-			if (def->minTime > 0 && 
-				def->curTime < def->minTime) continue;
-
-			if (def->onTrigger != nullptr && !def->isTriggerd)
-			{
-				(def->onTrigger)();
-			}
-			if (def->onRun != nullptr)
-			{
-				(def->onRun)();
-			}
-			def->isTriggerd = true;
+			onTrigger->onTrigger();
 		}
+		isTriggerd = true;
+	}
+
+	timeout -= hardware.diff;
+	if (timeout < 0)
+	{
+		timeout = 0;
+		isTriggerd = false;
+	}
+}
+
+void AngleDef::init(int8_t* ref, int8_t min, int8_t max)
+{
+	this->ref = ref;
+	this->min = min;
+	this->max = max;
+	active = true;
+
+	curTime = 0;
+	isInRange = false;
+	maxTime = 400;
+	minTime = 30;
+	onRun = nullptr;
+	onTrigger = nullptr;
+	isTriggerd = false;
+}
+
+void AngleDef::calculate()
+{
+	if (!active) return;
+
+	if (*ref < max &&
+		*ref > min)
+	{
+		isInRange = true;
+		if (curTime < maxTime) curTime += hardware.diff;
+		if (curTime > maxTime) curTime = maxTime;
+
+		if (minTime > 0 &&
+			curTime < minTime) return;
+
+		if (onTrigger != nullptr && !isTriggerd)
+		{
+			onTrigger->onTrigger();
+		}
+		if (onRun != nullptr)
+		{
+			onRun->onRun();
+		}
+		isTriggerd = true;
+	}
+	else
+	{
+		curTime -= hardware.diff;
+		if (curTime < 0)
+		{
+			curTime = 0;
+			isTriggerd = false;
+		}
+		isInRange = false;
+	}
+}
+
+void TrackAngleDef::init(int8_t* refX, int8_t* refY, int8_t resolutions, Tracker* cb)
+{
+	last = 0;
+	active = true;
+	this->refX = refX;
+	this->refY = refY;
+	this->resolutions = resolutions;
+	callback = cb;
+}
+
+void TrackAngleDef::calculate()
+{
+	if (!active) return;
+
+	double xAngle = 0;
+
+	if (*refY == 0 && *refX > 0)
+	{
+		xAngle = 180;
+	}
+	else if (*refY == 0 && *refX < 0)
+	{
+		xAngle = 360;
+	}
+	else
+	{
+		double angle = (double)*refX / (double)*refY;
+		xAngle = atan(angle) * RAD_TO_DEG;
+		if (*refY > 0)
+			xAngle += 90;
 		else
-		{
-			def->curTime -= diff;
-			if (def->curTime < 0)
-			{
-				def->curTime = 0;
-				def->isTriggerd = false;
-			}
-			def->isInRange = false;
-		}
+			xAngle += 270;
 	}
 
-	// IMPULSES
-	for (int i = 0; i < MAX_IMPULS_DEFS; i++)
+	double diff = xAngle - last;
+
+	// ref(350) - last(10) = diff(340) != diff(-20)
+	if (diff > 180)
 	{
-		ImpulsDef* def = &impulsRegisters[i];
-		if (!def->assigned || !def->active) continue;
-
-		if (*def->ref > POS_OFFSET) // anti schwingung
-		{
-			def->timeout = POS_TIMEOUT;
-		}
-
-		if (*def->ref < -POS_OFFSET && def->timeout > 0 && !def->isTriggerd)
-		{
-			if (def->onTrigger != nullptr)
-			{
-				(def->onTrigger)();
-			}
-			def->isTriggerd = true;
-		}
-
-		def->timeout -= diff;
-		if (def->timeout < 0)
-		{
-			def->timeout = 0;
-			def->isTriggerd = false;
-		}
+		diff = xAngle - 360 - last;
 	}
 
-	// TRACK ANGLES
-	for (int i = 0; i < MAX_TRACK_DEFS; i++)
+	// ref(10) - last(350) = diff(-340) != diff(20)
+	else if (diff < -180)
 	{
-		TrackAngleDef* def = &trackRegisters[i];
-		if (!def->assigned || !def->active) continue;
+		diff = 360 - last + xAngle;
+	}
 
-		double diff = *def->ref - def->last;
+	boolean forward = diff > resolutions || diff < -180;
+	boolean backward = diff < -resolutions || diff > 180;
+	if (forward)
+	{
+		last = xAngle;
+		callback->onTrack(1);
+	} else if (backward) {
+		last = xAngle;
+		callback->onTrack(-1);
+	}
+
+#ifdef DEBUG_TRACK
+	Serial.print("X: ");
+	Serial.print(*refX);
+	Serial.print(" Y: ");
+	Serial.print(*refY);
+	Serial.print(" Winkel: ");
+	Serial.println(xAngle);
+#endif
+}
+
+void Physics::init()
+{
+	for (int i = 0; i < 10; i++)
+		definitions[i] = nullptr;
+}
+
+void Physics::doPhysics()
+{
+	for (int i = 0; i < 10; i++)
+		if(definitions[i] != nullptr) {
+			definitions[i]->calculate();
+		}
 		
-		// ref(350) - last(10) = diff(340) != diff(-20)
-		if (diff > 180)
-		{
-			diff = *def->ref - 360 - def->last; 
-		}
-
-		// ref(10) - last(350) = diff(-340) != diff(20)
-		else if (diff < -180)
-		{
-			diff = 360 - def->last + *def->ref; 
-		}
-
-		boolean forward = diff > def->resolutions || diff < -180;
-		boolean backward = diff < -def->resolutions || diff > 180;
-		if (forward)
-		{
-			def->last = *def->ref;
-			def->callback(1);
-		}
-		else if(backward)
-		{
-			def->last = *def->ref;
-			def->callback(-1);
-		}
-	}
 }
 
-ImpulsDef* restrictImpuls(int8_t* ref)
+void Physics::add(Definition* def)
 {
-	for (int i = 0; i < MAX_IMPULS_DEFS; i++)
+	for (int i = 0; i < 10; i++)
+		if (definitions[i] == nullptr)
+		{
+			definitions[i] = def;
+			return;
+		}
+}
+
+void Physics::free(Definition* def)
+{
+	for (int i = 0; i < 10; i++)
 	{
-		ImpulsDef* def = &impulsRegisters[i];
-		if (!def->assigned)
+		if (definitions[i] == def)
 		{
-			def->ref = ref;
-			def->assigned = true;
-			def->active = true;
-			return def;
-		}
-
-	}
-	return nullptr;
-}
-
-AngleDef * restrictAngle(double* ref, int8_t min, int8_t max)
-{
-	for (int i = 0; i < MAX_ANGLE_DEFS; i++)
-	{
-		AngleDef* def = &angleRegisters[i];
-		if (!def->assigned)
-		{
-			def->ref = ref;
-			def->min = min;
-			def->max = max;
-			def->assigned = true;
-			def->active = true;
-			return def;
-		}
-
-	}
-	return nullptr;
-}
-
-TrackAngleDef* trackAngle(double* ref, int8_t resolutions, tracker cb)
-{
-	for (int i = 0; i < MAX_TRACK_DEFS; i++)
-	{
-		TrackAngleDef* def = &trackRegisters[i];
-		if (!def->assigned)
-		{
-			def->active = true;
-			def->assigned = true;
-			def->ref = ref;
-			def->resolutions = resolutions;
-			def->callback = cb;
-			return def;
+			definitions[i] = nullptr;
+			return;
 		}
 	}
-}
-
-void freeAngleDef(AngleDef* def)
-{
-	if (def == nullptr) return;
-	def->active = false;
-	def->assigned = false;
-	def->curTime = 0;
-	def->isInRange = false;
-	def->max = 0;
-	def->maxTime = POS_TIMEOUT * 2;
-	def->min = 0;
-	def->minTime = POS_TIMEOUT;
-	def->onRun = nullptr;
-	def->onTrigger = nullptr;
-	def->ref = nullptr;
-	def->isTriggerd = false;
-}
-
-void freeImpulsDef(ImpulsDef* def)
-{
-	if (def == nullptr) return;
-	def->active = false;
-	def->assigned = false;
-	def->onTrigger = nullptr;
-	def->ref = nullptr;
-	def->isTriggerd = false;
-}
-
-void freeTrackAngleDef(TrackAngleDef* def)
-{
-	if (def == nullptr) return;
-	def->active = false;
-	def->assigned = false;
-	def->callback = nullptr;
-	def->last = 0;
-	def->resolutions = 0;
-	def->ref = nullptr;
 }

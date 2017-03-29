@@ -6,19 +6,7 @@
 #include "Cube.h"
 #include "Ball.h"
 
-struct Control
-{
-	uint8_t x : 1,
-		y : 1,
-		z : 1,
-		inverseX : 1,
-		inverseY : 1,
-		inverseZ : 1;
-} control;
-
-Cube cube = Cube(0, 50, 0, 10, 180, 20);
-
-void doScan()
+void Effect_Scan::doIt()
 {
 	if (!control.x && !control.y && !control.z)
 	{
@@ -26,10 +14,10 @@ void doScan()
 	}
 
 	cube.setRGB(0, 0, 0);	
-	cube.move(control.inverseX ? -control.x : control.x, 
+	cube.move(control.inverseX ? -control.x : control.x,
 		control.inverseY ? -control.y : control.y,
 		control.inverseZ ? -control.z : control.z);
-	cube.setRGB(0xFFF,0,0);
+	cube.setRGB(sin(hardware.ms / 100) * 0x7FF, cos(hardware.ms / 100) * 0x7FF, tan(hardware.ms / 100) * 0x7FF);
 
 	if (control.x)
 	{
@@ -78,30 +66,3 @@ void doScan()
 		}
 	}
 }
-/*
-Ball ball = Ball(70,0,0, 40);
-uint8_t pos = 1;
-uint8_t dir = 5;
-
-void doScan()
-{
-	for (uint8_t i = 0; i < ball.ledCount; i++)
-	{
-		ball.leds[i]->setRGB(0, 0x0, 0);
-	}
-
-	pos += dir;
-	ball.setPos(70, pos, 0);
-
-	for (uint8_t i = 0; i < ball.ledCount; i++)
-	{
-		ball.leds[i]->setRGB(0, 0xFFF, 0);
-	}
-	if (pos > 100 || pos < 0)
-	{
-		dir *= -1;
-	}
-
-	delay(500);
-}
-*/

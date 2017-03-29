@@ -9,7 +9,15 @@
 	#include "WProgram.h"
 #endif
 
-void doHypnotic();
+#include "Effect.h"
+
+class Effect_Hypnotic : public Effect
+{
+public:
+	void doIt();
+private:
+	double sinX = 0.01;
+};
 
 #endif
 

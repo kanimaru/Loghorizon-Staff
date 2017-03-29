@@ -9,8 +9,18 @@
 	#include "WProgram.h"
 #endif
 
-void setupFire();
-void doFire();
+#include "Defines.h"
+#include "Effect.h"
+#include "Ball.h"
+
+class Effect_Fire : public Effect
+{
+public:
+	void doIt();
+private:
+	Ball ballSelector = Ball(0, 0, 0, FIRE_ANIMATE_RANGE);
+
+	void restrictBall(Ball* ball);
+};
 
 #endif
-

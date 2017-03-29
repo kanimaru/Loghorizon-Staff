@@ -1,3 +1,8 @@
+#include "ColorChanger.h"
+#include "Effect.h"
+#include "LightningBall.h"
+#include "ADXL345.h"
+#include <SPI.h>
 #include "Selector.h"
 #include "Cube.h"
 #include "Scan.h"
@@ -11,75 +16,132 @@
 #include "Sound.h"
 #include "Light.h"
 #include "Modes.h"
-#include "Timer.h"
 #include "Physics.h"
 
 void setup()
 {
-	delay(5000);
-
-	modeHandler.modes[0] = doHypnotic;
-	modeHandler.modes[1] = doFire;
-	modeHandler.modes[2] = doScan;
-
-	modeHandler.activeMode = doScan;
-
 	Serial.begin(19200);
-	hardware.setup();
 
+	hardware.init();
+	physics.init();
+	modes.init();
+	light.init();
 
+	Serial.print("Hardware");
+	Serial.println(sizeof(hardware));
 
-	setupPhysics();
-	modeHandler.setupModes();
-	setupLight();
+	Serial.print("Physics");
+	Serial.println(sizeof(physics));
+
+	Serial.print("Mode");
+	Serial.println(sizeof(modes));
 	//setupSound();
 
-	// ^ y
+	// ^ y 
 	// |  / z
 	// | /
 	// |/
 	// +-----> x
 
-	hardware.chips[0].leds[0].initDef(0, 29, 94, -6);
-	hardware.chips[0].leds[1].initDef(3, 17, 70, 0);
-	hardware.chips[0].leds[2].initDef(6, 37, 91, 2);
-	hardware.chips[0].leds[3].initDef(9, 27, 72, 6);
-	hardware.chips[0].leds[4].initDef(12, 28, 96, 6);
-	hardware.chips[1].leds[0].initDef(0, 55, 32, -6);
-	hardware.chips[1].leds[1].initDef(3, 35, 14, 6);
-	hardware.chips[1].leds[2].initDef(6, 61, 31, -1);
-	hardware.chips[1].leds[3].initDef(9, 59, 54, -6);
-	hardware.chips[1].leds[4].initDef(12, 55, 31, 6);
-	hardware.chips[2].leds[0].initDef(0, 48, 61, 0);
-	hardware.chips[2].leds[1].initDef(3, 60, 68, 0);
-	hardware.chips[2].leds[2].initDef(6, 29, 74, -6);
-	hardware.chips[2].leds[3].initDef(9, 56, 55, 6);
-	hardware.chips[2].leds[4].initDef(12, 44, 81, -1);
-	hardware.chips[3].leds[0].initDef(0, 43, 27, 1);
-	hardware.chips[3].leds[1].initDef(3, 32, 13, -6);
-	hardware.chips[3].leds[2].initDef(6, 37, 11, 1);
-	hardware.chips[3].leds[3].initDef(9, 12, 4, 6);
-	hardware.chips[3].leds[4].initDef(12, 12, 6, -6);
-	hardware.chips[4].leds[0].initDef(0, 13, 76, 1);
-	hardware.chips[4].leds[1].initDef(3, 19, 91, 1);
-	hardware.chips[4].leds[2].initDef(6, 29, 100, 3);
-	hardware.chips[4].leds[3].initDef(9, 24, 100, 0);
-	hardware.chips[4].leds[4].initDef(12, 24, 100, 5);
+	hardware.chips[0].leds[0].setPosition(29, 94, -6);
+	hardware.chips[0].leds[1].setPosition(17, 70, 0);
+	hardware.chips[0].leds[2].setPosition(37, 91, 2);
+	hardware.chips[0].leds[3].setPosition(27, 72, 6);
+	hardware.chips[0].leds[4].setPosition(28, 96, 6);
+	hardware.chips[1].leds[0].setPosition(55, 32, -6);
+	hardware.chips[1].leds[1].setPosition(35, 14, 6);
+	hardware.chips[1].leds[2].setPosition(61, 31, -1);
+	hardware.chips[1].leds[3].setPosition(59, 54, -6); // 
+	hardware.chips[1].leds[4].setPosition(55, 31, 6);
+	hardware.chips[2].leds[0].setPosition(48, 61, 0);
+	hardware.chips[2].leds[1].setPosition(60, 68, 0);
+	hardware.chips[2].leds[2].setPosition(29, 74, -6); //
+	hardware.chips[2].leds[3].setPosition(56, 55, 6);
+	hardware.chips[2].leds[4].setPosition(44, 81, -1);
+	hardware.chips[3].leds[0].setPosition(43, 27, 1);
+	hardware.chips[3].leds[1].setPosition(32, 13, -6);
+	hardware.chips[3].leds[2].setPosition(37, 11, 1);
+	hardware.chips[3].leds[3].setPosition(12, 4, 6);
+	hardware.chips[3].leds[4].setPosition(12, 6, -6);
+	hardware.chips[4].leds[0].setPosition(13, 76, 1);
+	hardware.chips[4].leds[1].setPosition(19, 91, 1);
+	hardware.chips[4].leds[2].setPosition(29, 100, 3);
+	hardware.chips[4].leds[3].setPosition(24, 100, 0);
+	hardware.chips[4].leds[4].setPosition(24, 100, 5);
 
-	//setupFire();
+	sound.boot();
 }
+/*
+int incomingByte = 0;   // for incoming serial data
+int packet[3];
+int counter;
+void serialEvent()
+{
+	if (Serial.available() > 0)
+	{
+		if (incomingByte == 0)
+		{
+			incomingByte = Serial.read();
+			if (incomingByte == 255)
+			{
+				Sound.playTone(packet[0], packet[1])
+				counter = 0;
+			}
+			packet[counter++] = incomingByte;
 
-
-
+		
+		}		
+	}
+}*/
 
 void loop() {
+#ifdef DEBUG_TIMING
+	uint32_t d = millis();
+#endif // DEBUG_TIMING
+
 	hardware.doAccel();
+#ifdef DEBUG_TIMING
+	Serial.print("After 1: ");
+	Serial.println(millis() - d);
+	d = millis();
+#endif // DEBUG_TIMING
 	
-	handleTime();
-	doPhysics();
-	modeHandler.doModes();
-	doLight();
-	//doSound();
-	
-	hardware.doLEDs();
+	hardware.doTime();
+	hardware.doCheckInactivity();
+#ifdef DEBUG_TIMING
+	Serial.print("After 2: ");
+	Serial.println(millis() - d);
+	d = millis();
+#endif // DEBUG_TIMING
+
+	physics.doPhysics();
+#ifdef DEBUG_TIMING
+	Serial.print("After 3: ");
+	Serial.println(millis() - d);
+	d = millis();
+#endif // DEBUG_TIMING
+
+	if (!hardware.inactive)
+	{
+		modes.doModes();
+#ifdef DEBUG_TIMING
+		Serial.print("After 4: ");
+		Serial.println(millis() - d);
+		d = millis();
+#endif // DEBUG_TIMING
+
+		hardware.doLEDs();
+#ifdef DEBUG_TIMING
+		Serial.print("After 5: ");
+		Serial.println(millis() - d);
+		d = millis();
+#endif // DEBUG_TIMING
+
+		sound.doSound();
+#ifdef DEBUG_TIMING
+		Serial.print("After 6: ");
+		Serial.println(millis() - d);
+		d = millis();
+#endif // DEBUG_TIMING
+	}
 }

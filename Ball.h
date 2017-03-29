@@ -21,7 +21,8 @@ public:
 	void setRadius(int16_t radius);
 
 	boolean isIn(int16_t x, int16_t y, int16_t z);
-	int16_t dist(int16_t x, int16_t y, int16_t z);
+	int16_t dist(int16_t _x, int16_t _y, int16_t _z);
+
 private:
 	int16_t _radius2, _radius;
 };

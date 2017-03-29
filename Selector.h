@@ -9,7 +9,8 @@
 	#include "WProgram.h"
 #endif
 
-#include "Hardware.h"
+#include "LED.h"
+#include "Defines.h"
 
 class Selector
 {
